@@ -1,13 +1,13 @@
 {
   "name": "concarne",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Express-like web application framework for Carne",
   "license": "MIT",
   "main": "index.js",
-  "homepage": "https://github.com/georgelemon/concarne",
+  "homepage": "https://github.com/getcarne/concarne",
   "repository": {
     "type": "git",
-    "url": "https://github.com/georgelemon/concarne"
+    "url": "https://github.com/getcarne/concarne"
   },
   "keywords": ["carne", "http", "framework", "express", "server", "powpow"]
 }

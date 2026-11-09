@@ -1,5 +1,6 @@
 // concarne: Express-like web framework for Carne.
-// Pure JS on top of std/http: routing, middleware, parsed req, res helpers.
+// Pure JS on top of std/http: routing, middleware, parsed req, res helpers,
+// static file serving with binary-safe bodies.
 //
 //   const concarne = require("pkg/concarne");
 //   const app = concarne();
@@ -14,6 +15,7 @@ var routerLib = require("./lib/router.js");
 var createDispatcher = routerLib.createDispatcher;
 var compilePath = routerLib.compilePath;
 var HttpError = require("./lib/request.js").HttpError;
+var serveStatic = require("./lib/static.js").serveStatic;
 
 function flattenInto(out, fns) {
   for (var i = 0; i < fns.length; i++) {
@@ -166,3 +168,4 @@ function concarne() {
 
 module.exports = concarne;
 module.exports.HttpError = HttpError;
+module.exports["static"] = serveStatic;

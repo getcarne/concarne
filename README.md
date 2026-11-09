@@ -37,6 +37,31 @@ app.use((err, req, res, next) => {
 app.listen(3000);
 ```
 
+## Static files
+
+`concarne.static(root[, opts])` serves a directory tree as
+middleware. Only `GET`/`HEAD` run; anything else (and any miss)
+calls `next()`, so the app's own routes and 404 own the request.
+Files go out as binary bodies (NUL-safe) with `ETag` /
+`Last-Modified` and `304` handling; symlinks are followed and
+dotfiles answer like misses.
+
+```js
+app.use(concarne.static("./public", {maxAge: 3600}));
+app.use("/assets", concarne.static("./public", {strip: "/assets"}));
+```
+
+Options: `index` (default `"index.html"`, `null` disables directory
+indexes), `maxAge` (seconds for `Cache-Control`, default `0`),
+`strip` (prefix to remove before mapping, for mounted middleware).
+Directories without a trailing slash redirect (`301`) to the slash
+form; traversal outside the root is always a miss.
+
+`res.sendFile(path)` answers a single file (404 JSON when missing),
+and `res.send`/`res.end` also accept `Uint8Array` bodies
+(`Content-Type` defaults to `application/octet-stream`).
+
+
 ## API
 
 Routes: `app.get/post/put/patch/delete/all(path, ...handlers)`. Paths take
@@ -58,7 +83,8 @@ reads a header case-insensitively; `req.rawBody` is the untouched string.
 
 `res` (all chainable): `status(code)`, `set(field, value)` / `set(obj)`,
 `type(name)` (`html`, `json`, `text`, `css`, `js`, `xml`, or a full
-content type), `send(string|object|number)`, `json(obj)`,
+content type), `send(string|object|number|Uint8Array)`, `json(obj)`,
+`sendFile(path)`,
 `redirect(url[, code])`, `end([body])`. First send wins; later sends are
 ignored. `concarne.HttpError(status, message)` builds errors the default
 handler respects.
@@ -82,8 +108,7 @@ app.listen(3000, {workers: 4});
 ## Limits in v1
 
 Sync route handlers only (the runtime expects the response back from the
-serve handler). No static file serving (use `std/fs` directly for text).
-CommonJS only, like every Carne package.
+serve handler). CommonJS only, like every Carne package.
 
 With `workers > 1` each worker is an isolated runtime re-running your
 script: no shared state, and module-level side effects (counters, caches,
