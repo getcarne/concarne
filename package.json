@@ -1,6 +1,6 @@
 {
   "name": "concarne",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Express-like web application framework for Carne",
   "license": "MIT",
   "main": "index.js",
