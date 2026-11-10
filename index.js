@@ -10,12 +10,12 @@
 // Handlers are synchronous in v1 (the runtime expects the response back
 // from the serve handler, so async route handlers cannot work yet).
 
-var http = require("std/http");
-var routerLib = require("./lib/router.js");
-var createDispatcher = routerLib.createDispatcher;
-var compilePath = routerLib.compilePath;
-var HttpError = require("./lib/request.js").HttpError;
-var serveStatic = require("./lib/static.js").serveStatic;
+const http = require("std/http");
+const routerLib = require("./lib/router.js");
+const createDispatcher = routerLib.createDispatcher;
+const compilePath = routerLib.compilePath;
+const HttpError = require("./lib/request.js").HttpError;
+const serveStatic = require("./lib/static.js").serveStatic;
 
 function flattenInto(out, fns) {
   for (var i = 0; i < fns.length; i++) {
