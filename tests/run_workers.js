@@ -6,7 +6,11 @@
 // main fetches and closes.
 const http = require("std/http");
 const concarne = require("../index.js");
-const check = require("./helper.js").check;
+
+function check(cond, msg) {
+  if (!cond) throw new Error("failed: " + msg);
+  console.log("ok: " + msg);
+}
 
 var app = concarne();
 app.get("/hi", (req, res) => res.json({hi: "ada", worker: process.isWorker}));

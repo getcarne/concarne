@@ -1,9 +1,9 @@
 // Router: params, wildcards, methods, middleware order and scoping.
+const { test, expect } = require("std/test");
 const http = require("std/http");
 const concarne = require("../index.js");
-const check = require("./helper.js").check;
 
-async function run() {
+test("router: params, wildcards, methods, middleware scoping", async () => {
   var app = concarne();
   var order = [];
 
@@ -19,35 +19,34 @@ async function run() {
   app.listen(18402);
 
   var r = await http.get("http://127.0.0.1:18402/users/42");
-  check(JSON.parse(r.body).id === "42", ":param extracts");
+  expect(JSON.parse(r.body).id).toBe("42");
 
   r = await http.get("http://127.0.0.1:18402/users/a%20b");
-  check(JSON.parse(r.body).id === "a b", ":param decodes");
+  expect(JSON.parse(r.body).id).toBe("a b");
 
   r = await http.get("http://127.0.0.1:18402/files/a/b/c.txt");
-  check(JSON.parse(r.body).rest === "a/b/c.txt", "wildcard spans slashes");
+  expect(JSON.parse(r.body).rest).toBe("a/b/c.txt");
 
   r = await http.get("http://127.0.0.1:18402/multi");
-  check(r.body === "chained", "array + chained handlers run in order");
+  expect(r.body).toBe("chained");
 
   r = await http.post("http://127.0.0.1:18402/users", "x");
-  check(r.status === 201 && r.body === "made", "method routing (POST)");
+  expect(r.status).toBe(201);
+  expect(r.body).toBe("made");
 
   r = await http.get("http://127.0.0.1:18402/users");
-  check(r.status === 404, "wrong method does not match (404, no 405 in v1)");
+  expect(r.status).toBe(404);
 
   r = await http.fetch("http://127.0.0.1:18402/any", {method: "PUT"});
-  check(r.body === "PUT", "all() matches every method");
+  expect(r.body).toBe("PUT");
 
   order = [];
   r = await http.get("http://127.0.0.1:18402/api/seen");
-  check(JSON.stringify(JSON.parse(r.body).order) === '["global","api-scope"]', "prefix use() runs for its subtree");
+  expect(JSON.parse(r.body).order).toEqual(["global", "api-scope"]);
 
   order = [];
   r = await http.get("http://127.0.0.1:18402/plain");
-  check(JSON.stringify(JSON.parse(r.body).order) === '["global"]', "prefix use() skips other paths");
+  expect(JSON.parse(r.body).order).toEqual(["global"]);
 
   app.close();
-}
-
-module.exports = {run: run};
+});

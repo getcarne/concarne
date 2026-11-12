@@ -15,7 +15,7 @@ jobs:
       - uses: getcarne/action@main
         with:
           carne-version: latest
-      - name: Run single-worker suite
-        run: carne run tests/run.js
+      - name: Run test suite
+        run: carne test
       - name: Run multi-worker suite
         run: carne run tests/run_workers.js
