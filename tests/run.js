@@ -1,5 +1,6 @@
 // concarne test entry: runs every case file sequentially in one run.
 // Usage: carne run tests/run.js (from the package root).
+const terminal = require("std/terminal");
 const basics = require("./test_basics.js");
 const router = require("./test_router.js");
 const bodies = require("./test_bodies.js");
@@ -18,5 +19,5 @@ const workers = require("./test_workers.js");
   await ratelimit.run();
   await statics.run();
   await workers.run();
-  console.log("all concarne tests passed");
+  console.log(terminal.green("all concarne tests passed"));
 })();
