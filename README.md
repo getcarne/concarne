@@ -37,6 +37,46 @@ app.use((err, req, res, next) => {
 app.listen(3000);
 ```
 
+## CORS
+
+`concarne.cors([opts])` is middleware in the express `cors` shape.
+Requests without an Origin header pass through untouched; preflights
+end here with `optionsSuccessStatus` (default 204) unless
+`preflightContinue` is set.
+
+```
+app.use(concarne.cors());
+app.use(concarne.cors({origin: "https://app.example.com", credentials: true}));
+app.use("/api", concarne.cors({origin: ["https://a.example.com"]}));
+```
+
+`origin` takes `"*"` (default), an exact string, an array of exact
+strings, `true` to reflect the request origin, or
+`function (origin)` returning `true`, an allowed string, or a falsy
+value to deny. With `credentials: true` a wildcard reflects instead of
+answering `*`, per the spec. Other opts: `methods` (default
+`"GET,HEAD,PUT,PATCH,POST,DELETE"`), `allowedHeaders` (default: reflect
+the request's), `exposedHeaders`, `maxAge` (seconds),
+`optionsSuccessStatus`, `preflightContinue`.
+
+## Rate limit
+
+`concarne.rateLimit([opts])` caps requests per key in a fixed window.
+Counters live in memory, so each worker under `workers > 1` counts on
+its own: set limits conservatively when serving multi-worker.
+
+```
+app.use(concarne.rateLimit({windowMs: 60000, limit: 100}));
+```
+
+Defaults: `windowMs: 60000`, `limit: 100` (`max` is accepted as an
+alias), key `req.ip`, 429 `"Too many requests"`. Every answer carries
+`RateLimit-Limit/Remaining/Reset`, and 429s add `Retry-After`. Tune
+with `key(req)`, `message` (string or object), `statusCode`,
+`headers: false`, `skip(req)`, and `onLimit(req, res)` for a custom
+429 responder. The middleware also carries `.reset(key)` and `.clear()`
+helpers. Bad options throw at factory time, not per request.
+
 ## Static files
 
 `concarne.static(root[, opts])` serves a directory tree as
@@ -75,18 +115,22 @@ Four-arg functions are error middleware and only run after `next(err)` or
 a throw. Unmatched requests answer `404 {error, path}`; unhandled errors
 answer `500 {error}`.
 
-`req`: `method`, `path`, `url`, `headers`, `params`, plus lazy `query`
-(repeated keys become arrays, `+` decodes to space), `body` (parsed JSON
-for JSON content types with a 400 on invalid input, parsed pairs for
-urlencoded forms, raw string otherwise), and `cookies`. `req.get(name)`
-reads a header case-insensitively; `req.rawBody` is the untouched string.
+`req`: `method`, `path`, `url`, `headers`, `params`, `ip` (the peer
+address), plus lazy `query` (repeated keys become arrays, `+` decodes
+to space), `body` (parsed JSON for JSON content types with a 400 on
+invalid input, parsed pairs for urlencoded forms, raw string
+otherwise), and `cookies`. `req.get(name)` reads a header
+case-insensitively; `req.rawBody` is the untouched string.
 
 `res` (all chainable): `status(code)`, `set(field, value)` / `set(obj)`,
-`type(name)` (`html`, `json`, `text`, `css`, `js`, `xml`, or a full
-content type), `send(string|object|number|Uint8Array)`, `json(obj)`,
-`sendFile(path)`,
+`type(name)` (`html`, `json`, `text`, `css`, `js`, `xml`, anything
+`std/mimetype` knows, or a full content type), `send(string|object|
+number|Uint8Array)`, `json(obj)`, `sendFile(path)`,
 `redirect(url[, code])`, `end([body])`. First send wins; later sends are
-ignored. `concarne.HttpError(status, message)` builds errors the default
+ignored. Short names resolve through `std/mimetype`, so `sendFile` and
+`type` always agree (`js` answers `application/javascript`, `xml`
+answers `text/xml`, each with a UTF-8 charset).
+`concarne.HttpError(status, message)` builds errors the default
 handler respects.
 
 `app.listen(port[, host][, opts][, cb])` returns `{port, host, workers,

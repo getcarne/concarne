@@ -2,7 +2,7 @@
 // Then:
 //   curl http://127.0.0.1:3000/users/42
 //   curl -X POST http://127.0.0.1:3000/users -H 'content-type: application/json' -d '{"name":"ada"}'
-var concarne = require("../index.js");
+const concarne = require("../index.js");
 
 var app = concarne();
 var nextId = 3;

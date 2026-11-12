@@ -1,8 +1,8 @@
 // Errors: throws, next(err), error middleware, err.status, recovery.
-var http = require("std/http");
-var concarne = require("../index.js");
-var HttpError = require("../index.js").HttpError;
-var check = require("./helper.js").check;
+const http = require("std/http");
+const concarne = require("../index.js");
+const HttpError = require("../index.js").HttpError;
+const check = require("./helper.js").check;
 
 async function run() {
   var app = concarne();

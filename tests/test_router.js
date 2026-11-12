@@ -1,7 +1,7 @@
 // Router: params, wildcards, methods, middleware order and scoping.
-var http = require("std/http");
-var concarne = require("../index.js");
-var check = require("./helper.js").check;
+const http = require("std/http");
+const concarne = require("../index.js");
+const check = require("./helper.js").check;
 
 async function run() {
   var app = concarne();

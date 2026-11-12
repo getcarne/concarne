@@ -1,8 +1,8 @@
 // concarne static example. Run from the package root:
 //   carne run examples/static.js
 // Then: curl http://127.0.0.1:3000/ http://127.0.0.1:3000/site.css
-var env = require("std/env");
-var concarne = require("../index.js");
+const env = require("std/env");
+const concarne = require("../index.js");
 
 var app = concarne();
 

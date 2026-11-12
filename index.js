@@ -16,6 +16,8 @@ const createDispatcher = routerLib.createDispatcher;
 const compilePath = routerLib.compilePath;
 const HttpError = require("./lib/request.js").HttpError;
 const serveStatic = require("./lib/static.js").serveStatic;
+const cors = require("./lib/cors.js").cors;
+const rateLimit = require("./lib/ratelimit.js").rateLimit;
 
 function flattenInto(out, fns) {
   for (var i = 0; i < fns.length; i++) {
@@ -169,3 +171,5 @@ function concarne() {
 module.exports = concarne;
 module.exports.HttpError = HttpError;
 module.exports["static"] = serveStatic;
+module.exports.cors = cors;
+module.exports.rateLimit = rateLimit;

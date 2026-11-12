@@ -4,9 +4,9 @@
 // worker re-runs this whole file, so the driver (fetch/assert/close)
 // is gated on process.isWorker. Main + workers all run listen(); only
 // main fetches and closes.
-var http = require("std/http");
-var concarne = require("../index.js");
-var check = require("./helper.js").check;
+const http = require("std/http");
+const concarne = require("../index.js");
+const check = require("./helper.js").check;
 
 var app = concarne();
 app.get("/hi", (req, res) => res.json({hi: "ada", worker: process.isWorker}));

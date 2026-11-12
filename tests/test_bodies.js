@@ -1,7 +1,7 @@
 // Bodies: query parsing, JSON/urlencoded bodies, cookies, req.get.
-var http = require("std/http");
-var concarne = require("../index.js");
-var check = require("./helper.js").check;
+const http = require("std/http");
+const concarne = require("../index.js");
+const check = require("./helper.js").check;
 
 async function run() {
   var app = concarne();
@@ -14,6 +14,8 @@ async function run() {
     theme: req.cookies.theme,
     missing: req.cookies.nope || null
   }));
+  app.get("/typed", (req, res) => res.type("js").send("1"));
+  app.get("/marked", (req, res) => res.type("xml").send("<a/>"));
   app.listen(18403);
 
   var r = await http.get("http://127.0.0.1:18403/q?a=1&b=x+y&c&c=2&empty=");
@@ -46,6 +48,13 @@ async function run() {
   check(who.agent === "carne-test", "req.get reads headers");
   check(who.agentUpper === "carne-test", "req.get is case-insensitive");
   check(who.session === "abc" && who.theme === "dark", "cookies parse");
+
+  r = await http.get("http://127.0.0.1:18403/typed");
+  check(r.headers["content-type"] === "application/javascript; charset=utf-8",
+    "type(js) resolves via std/mimetype");
+  r = await http.get("http://127.0.0.1:18403/marked");
+  check(r.headers["content-type"] === "text/xml; charset=utf-8",
+    "type(xml) resolves via std/mimetype");
   check(who.missing === null, "missing cookie is undefined");
 
   app.close();

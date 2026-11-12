@@ -1,7 +1,7 @@
 // Static serving: files, indexes, redirects, 304s, fallthrough.
-var http = require("std/http");
-var concarne = require("../index.js");
-var check = require("./helper.js").check;
+const http = require("std/http");
+const concarne = require("../index.js");
+const check = require("./helper.js").check;
 
 var ROOT = "tests/fixtures/public";
 

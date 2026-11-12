@@ -2,7 +2,7 @@
 // Then: curl http://127.0.0.1:3000/hi/ada (repeat; both runtimes answer).
 // With workers > 1 every worker re-runs this file, so driver code must
 // be gated on process.isWorker: all contexts listen, only main drives.
-var concarne = require("../index.js");
+const concarne = require("../index.js");
 
 var app = concarne();
 

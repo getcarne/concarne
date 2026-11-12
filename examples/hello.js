@@ -1,6 +1,6 @@
 // concarne hello example. Run: carne run examples/hello.js
 // Then: curl http://127.0.0.1:3000/hi/ada
-var concarne = require("../index.js");
+const concarne = require("../index.js");
 
 var app = concarne();
 
