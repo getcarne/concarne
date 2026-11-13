@@ -13,93 +13,43 @@
 const http = require("std/http");
 const routerLib = require("./lib/router.js");
 const createDispatcher = routerLib.createDispatcher;
-const compilePath = routerLib.compilePath;
+const ensureCompiled = routerLib.ensureCompiled;
+const attachRouting = routerLib.attachRouting;
+const createRouter = routerLib.createRouter;
 const HttpError = require("./lib/request.js").HttpError;
 const serveStatic = require("./lib/static.js").serveStatic;
 const cors = require("./lib/cors.js").cors;
 const rateLimit = require("./lib/ratelimit.js").rateLimit;
+const bodyLib = require("./lib/body.js");
+const logger = require("./lib/logger.js").logger;
+const helmet = require("./lib/helmet.js").helmet;
+const requestId = require("./lib/requestid.js").requestId;
 
-function flattenInto(out, fns) {
-  for (var i = 0; i < fns.length; i++) {
-    if (Array.isArray(fns[i])) flattenInto(out, fns[i]);
-    else out.push(fns[i]);
-  }
-  return out;
-}
-
+/**
+ * Creates an application: the Express-shaped registration API
+ * (`use`, one method per verb plus `all`, `route` chaining, `param`)
+ * with `listen`/`close` owning the `std/http` server. Routes compile
+ * lazily on first listen so registration stays cheap.
+ * @returns {object} the app
+ */
 function concarne() {
-  var stack = [];
-
-  function use(path, fns) {
-    if (typeof path === "function" || Array.isArray(path)) {
-      fns = [path].concat(fns || []);
-      path = null;
-    } else if (Array.isArray(fns)) {
-      fns = fns;
-    } else {
-      fns = fns === undefined ? [] : [fns];
-    }
-    var flat = flattenInto([], fns);
-    if (flat.length === 0) {
-      throw new Error("concarne.use: handler is not a function");
-    }
-    for (var i = 0; i < flat.length; i++) {
-      if (typeof flat[i] !== "function") {
-        throw new Error("concarne.use: handler is not a function");
-      }
-      stack.push({
-        type: "middleware",
-        path: path,
-        fn: flat[i],
-        isError: flat[i].length === 4
-      });
-    }
-    return app;
-  }
-
-  function addRoute(method, path, fns) {
-    var flat = flattenInto([], fns);
-    if (flat.length === 0) {
-      throw new Error("concarne: route " + method + " " + path + " needs a handler");
-    }
-    for (var i = 0; i < flat.length; i++) {
-      if (typeof flat[i] !== "function") {
-        throw new Error("concarne: route handler is not a function");
-      }
-      stack.push({type: "route", method: method, path: path, fn: flat[i]});
-    }
-    return app;
-  }
-
-  // Routes compile lazily on first listen so registration stays cheap.
-  var compiled = false;
-  function ensureCompiled() {
-    if (compiled) return;
-    for (var i = 0; i < stack.length; i++) {
-      if (stack[i].type === "route") {
-        stack[i].compiled = compilePath(stack[i].path);
-      }
-    }
-    compiled = true;
-  }
+  var state = {stack: [], compiled: false, paramCallbacks: {}, settings: {}};
 
   var app = {
-    use: use,
-    get: function (path) {
-      return addRoute("GET", path, Array.prototype.slice.call(arguments, 1));
-    },
-    post: function (path) {
-      return addRoute("POST", path, Array.prototype.slice.call(arguments, 1));
-    },
-    put: function (path) {
-      return addRoute("PUT", path, Array.prototype.slice.call(arguments, 1));
-    },
-    patch: function (path) {
-      return addRoute("PATCH", path, Array.prototype.slice.call(arguments, 1));
-    },
-    all: function (path) {
-      return addRoute("ALL", path, Array.prototype.slice.call(arguments, 1));
-    },
+    /**
+     * Serves the app: `listen(port[, host][, opts][, cb])`. `opts`
+     * passes through to `http.serve` (`workers?`, `keepAliveMs?`,
+     * `readTimeoutMs?`, `maxBodySize?`); `workers` (1..64, default 1)
+     * serves from N full runtimes re-running the script, so gate
+     * driver code (fetch/close/asserts) on `process.isWorker`.
+     * @param {number} port the port to serve on
+     * @param {string} [host] the interface to bind
+     * @param {object} [opts] serve options (workers, timeouts, limits)
+     * @param {Function} [cb] called with the `{port, host, workers}`
+     *   server info once listening
+     * @returns {{port: number, host: string, workers: number,
+     *   close: Function}} the server handle
+     */
     listen: function (port, host, opts, cb) {
       // listen(port[, host][, opts][, cb]): single (default) or multi
       // worker. opts passes through to http.serve: {workers?,
@@ -133,8 +83,9 @@ function concarne() {
           throw new Error("concarne.listen: bad argument #" + (i + 2));
         }
       }
-      ensureCompiled();
-      var handler = createDispatcher(stack);
+      ensureCompiled(state);
+      var handler = createDispatcher(state.stack, state.paramCallbacks,
+        {trustProxy: state.settings["trust proxy"] === true});
       var srv;
       if (host === undefined && opts === undefined) {
         srv = http.serve(port, handler);
@@ -155,6 +106,10 @@ function concarne() {
         close: function () { return app.close(); }
       };
     },
+    /**
+     * Stops the server. Safe to call when not listening.
+     * @returns {boolean} true when a server was actually closed
+     */
     close: function () {
       if (!app._server) return false;
       var ok = http.close(app._server.port);
@@ -162,14 +117,17 @@ function concarne() {
       return ok;
     }
   };
-  app["delete"] = function (path) {
-    return addRoute("DELETE", path, Array.prototype.slice.call(arguments, 1));
-  };
-  return app;
+  return attachRouting(app, state);
 }
 
 module.exports = concarne;
 module.exports.HttpError = HttpError;
+module.exports.Router = createRouter;
 module.exports["static"] = serveStatic;
 module.exports.cors = cors;
 module.exports.rateLimit = rateLimit;
+module.exports.json = bodyLib.json;
+module.exports.urlencoded = bodyLib.urlencoded;
+module.exports.logger = logger;
+module.exports.helmet = helmet;
+module.exports.requestId = requestId;

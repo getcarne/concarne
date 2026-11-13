@@ -35,7 +35,9 @@ test("router: params, wildcards, methods, middleware scoping", async () => {
   expect(r.body).toBe("made");
 
   r = await http.get("http://127.0.0.1:18402/users");
-  expect(r.status).toBe(404);
+  expect(r.status).toBe(405);
+  expect((r.headers["allow"] || "").indexOf("POST") >= 0).toBe(true);
+  expect(JSON.parse(r.body).error).toBe("Method Not Allowed");
 
   r = await http.fetch("http://127.0.0.1:18402/any", {method: "PUT"});
   expect(r.body).toBe("PUT");
