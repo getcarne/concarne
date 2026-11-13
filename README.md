@@ -4,17 +4,25 @@
   Routing, middleware and JSON APIs in pure JS on top of <code>std/http</code>.
 </p>
 
-## Install
+<p align="center">
+  <code>carne pkg install concarne</code>
+</p>
 
-```bash
-carne pkg install concarne
-```
+<p align="center">
+  <img src="https://github.com/getcarne/flysystem/workflows/test/badge.svg" alt="Github Actions">
+</p>
 
-Or link a checkout while developing:
+## Features
 
-```bash
-carne pkg develop /path/to/concarne
-```
+- Express-style routing: `:params`, `*` wildcards, mountable routers
+- Middleware with path prefixes and 4-arg error handlers
+- JSON, urlencoded and multipart bodies with size limits
+- Cookies in and out, with expiry and `SameSite` support
+- Content negotiation, redirects, downloads and status helpers
+- Zero-copy static files and media streaming with ETag/Range support
+- CORS, rate limiting, helmet, logger and request IDs in core
+- Single or multi-worker serving off one port
+- Sync handlers, CommonJS, pure JS on `std/http`
 
 ## Usage
 
@@ -36,18 +44,6 @@ app.use((err, req, res, next) => {
 
 app.listen(3000);
 ```
-
-## Features
-
-- Express-style routing: `:params`, `*` wildcards, mountable routers
-- Middleware with path prefixes and 4-arg error handlers
-- JSON, urlencoded and multipart bodies with size limits
-- Cookies in and out, with expiry and `SameSite` support
-- Content negotiation, redirects, downloads and status helpers
-- Zero-copy static files and media streaming with ETag/Range support
-- CORS, rate limiting, helmet, logger and request IDs in core
-- Single or multi-worker serving off one port
-- Sync handlers, CommonJS, pure JS on `std/http`
 
 ## Routers
 
