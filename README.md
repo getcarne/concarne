@@ -37,6 +37,18 @@ app.use((err, req, res, next) => {
 app.listen(3000);
 ```
 
+## Features
+
+- Express-style routing: `:params`, `*` wildcards, mountable routers
+- Middleware with path prefixes and 4-arg error handlers
+- JSON, urlencoded and multipart bodies with size limits
+- Cookies in and out, with expiry and `SameSite` support
+- Content negotiation, redirects, downloads and status helpers
+- Zero-copy static files and media streaming with ETag/Range support
+- CORS, rate limiting, helmet, logger and request IDs in core
+- Single or multi-worker serving off one port
+- Sync handlers, CommonJS, pure JS on `std/http`
+
 ## Routers
 
 `concarne.Router()` builds a mountable sub-app with the same API
