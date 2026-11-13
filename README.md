@@ -209,11 +209,12 @@ honored: `req.ip` reads the leftmost `X-Forwarded-For` entry,
 ## Static files
 
 `concarne.static(root[, opts])` serves a directory tree as
-middleware. Only `GET`/`HEAD` run; anything else (and any miss)
+middleware, zero-copy: bytes go out via sendfile, never buffered in
+the JS heap. Only `GET`/`HEAD` run; anything else (and any miss)
 calls `next()`, so the app's own routes and 404 own the request.
-Files go out as binary bodies (NUL-safe) with `ETag` /
-`Last-Modified` and `304` handling; symlinks are followed and
-dotfiles answer like misses.
+Ranges, conditional revalidation and `HEAD` come from the file
+serving itself (see below); symlinks are followed and dotfiles answer
+like misses.
 
 ```js
 app.use(concarne.static("./public", {maxAge: 3600}));
@@ -229,6 +230,31 @@ form; traversal outside the root is always a miss.
 `res.sendFile(path)` answers a single file (404 JSON when missing),
 and `res.send`/`res.end` also accept `Uint8Array` bodies
 (`Content-Type` defaults to `application/octet-stream`).
+
+## Zero-copy file serving
+
+`res.sendFile(path)`, `res.download(path[, filename])` and the
+static middleware answer from disk via sendfile: the file is never
+read into the JS heap, so multi-gigabyte responses cost ~nothing in
+memory. `res.streamFile(path[, chunkSize])` streams media the same
+way, answering 206 with one chunk per response (default 1 MB, so
+seeking transfers a slice, not the file).
+
+ETag and range support come free with every file answer, no
+middleware needed:
+
+- `ETag` (`"size-mtime"`) and `Last-Modified` ride every 200;
+  `If-None-Match`/`If-Modified-Since` answer `304` with empty bodies.
+- `Range` answers `206` with `Content-Range` and `Accept-Ranges:
+  bytes`; unsatisfiable ranges answer `416`; `If-Range` revalidates
+  before ranging.
+- `HEAD` answers the same headers with an empty body (`Content-Length`
+  reads `0`, like every `HEAD` response in v1).
+- `Content-Type` follows the runtime's bare MIME table (no charset
+  suffix, e.g. `text/html` rather than `text/html; charset=utf-8`);
+  extra headers set beforehand (e.g. `Cache-Control`) pass through,
+  except the names the file serving owns (`Content-Type`,
+  `Content-Length`, `Content-Range`, `Connection`, `Date`).
 
 
 ## API
@@ -266,7 +292,9 @@ response.
 `get(field)`, `type(name)` (`html`, `json`, `text`, `css`, `js`, `xml`,
 anything `std/mimetype` knows, or a full content type),
 `send(string|object|number|Uint8Array)`, `json(obj)`,
-`sendFile(path)`, `download(path[, filename])`,
+`sendFile(path)` (zero-copy, ranges/conditionals automatic, bare
+MIME), `streamFile(path[, chunkSize])` (206-first media streaming),
+`download(path[, filename])` (zero-copy attachment),
 `attachment([filename])`, `redirect(url[, code])`,
 `location(url)`, `links(obj)`, `vary(field)`, `cookie(name, value[,
 opts])`, `clearCookie(name[, opts])`, `sendStatus(code)`,

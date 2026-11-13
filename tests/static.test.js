@@ -18,7 +18,7 @@ test("static: files, indexes, redirects, etags, fallthrough", async () => {
   var r = await http.get("http://127.0.0.1:18430/hello.txt");
   expect(r.status).toBe(200);
   expect(r.body).toBe("hello static\n");
-  expect(r.headers["content-type"]).toBe("text/plain; charset=utf-8");
+  expect(r.headers["content-type"]).toBe("text/plain");
   expect(r.headers["etag"] !== undefined).toBe(true);
   expect(r.headers["last-modified"] !== undefined).toBe(true);
   expect(r.headers["cache-control"]).toBe("public, max-age=60");
@@ -26,7 +26,7 @@ test("static: files, indexes, redirects, etags, fallthrough", async () => {
   r = await http.get("http://127.0.0.1:18430/");
   expect(r.status).toBe(200);
   expect(r.body).toBe("<h1>concarne static</h1>\n");
-  expect(r.headers["content-type"]).toBe("text/html; charset=utf-8");
+  expect(r.headers["content-type"]).toBe("text/html");
 
   r = await http.get("http://127.0.0.1:18430/sub/");
   expect(r.status).toBe(200);
@@ -35,7 +35,7 @@ test("static: files, indexes, redirects, etags, fallthrough", async () => {
   r = await http.get("http://127.0.0.1:18430/sub/app.css");
   expect(r.status).toBe(200);
   expect(r.body).toBe("body { color: red; }\n");
-  expect(r.headers["content-type"]).toBe("text/css; charset=utf-8");
+  expect(r.headers["content-type"]).toBe("text/css");
 
   r = await http.get("http://127.0.0.1:18430/sub");
   expect(r.status).toBe(301);
@@ -88,7 +88,7 @@ test("static: res.sendFile and binary res.send", async () => {
   var r = await http.get("http://127.0.0.1:18431/f");
   expect(r.status).toBe(200);
   expect(r.body).toBe("hello static\n");
-  expect(r.headers["content-type"]).toBe("text/plain; charset=utf-8");
+  expect(r.headers["content-type"]).toBe("text/plain");
   r = await http.get("http://127.0.0.1:18431/missing");
   expect(r.status).toBe(404);
   r = await http.get("http://127.0.0.1:18431/bin");
